@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+
+# personal test files
+test.py
+test.ipynb
