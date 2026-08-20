@@ -1,0 +1,20 @@
+{
+  "name": "Log extension for My Anime History",
+  "externally_connectable": {
+    "matches": ["http://localhost:3000/*"]
+  },
+  "description": "Base Level Extension",
+  "version": "1.0",
+  "manifest_version": 3,
+  "action": {
+    "default_popup": "main.html",
+    "default_icon": "image.png"
+  },
+  "background": {
+    "service_worker": "service-worker.js",
+    "type": "module"
+  },
+  "permissions": [
+    "history"
+  ]
+}
