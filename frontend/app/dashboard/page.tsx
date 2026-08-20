@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import FetchHistoryButton from './FetchHistoryButton'
 
 type AnimeData = {
   title_japanese: string
@@ -6,8 +7,8 @@ type AnimeData = {
 }
 
 export default async function Page() {
-  let res = (await fetch("http://127.0.0.1:8000/recommend/next"))
-  const top3AnimeList: AnimeData[] = await res.json()
+  let res = (await fetch("http://127.0.0.1:8000/recommend/next"));
+  const top3AnimeList: AnimeData[] = await res.json();
   return (
     <div>
       {top3AnimeList.map((anime) => (
@@ -21,6 +22,7 @@ export default async function Page() {
           <p>{anime.title_japanese}</p>
         </div>
       ))}
+      <FetchHistoryButton></FetchHistoryButton>
     </div>
-  )
+  );
 }
