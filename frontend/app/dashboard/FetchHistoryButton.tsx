@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-const EXTENSION_ID = "mfcglgikocjeeaklkegpfhgfdbgcillk";
+const EXTENSION_ID = process.env.NEXT_PUBLIC_EXTENSION_ID;
 
 export default function FetchHistoryButton(){
   const [titles, setTitles] = useState<string[]>([]);// Titlesの部分は更新して欲しい。
