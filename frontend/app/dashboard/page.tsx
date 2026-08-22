@@ -11,57 +11,55 @@ export default async function Page() {
   const top3AnimeList: AnimeData[] = await res.json()
 
   return (
-    <div className="max-w-[860px] mx-auto px-5 pt-12 pb-20 flex flex-col gap-10">
-      <div className="flex flex-col gap-1.5">
-        <h1 className="font-display text-[36px] bg-gradient-to-r from-violet to-magenta bg-clip-text text-transparent drop-shadow-[0_0_18px_rgba(155,107,255,0.45)] m-0">
-          KawaAni
-        </h1>
-        <p className="font-body text-sm text-text-soft m-0">あなたにマッチしたアニメを提案します</p>
-      </div>
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 pt-12 pb-16">
+      <header className="flex flex-col gap-1.5">
+        <h1 className="m-0 font-display text-4xl text-accent">KawaAni</h1>
+        <p className="m-0 text-sm text-text-soft text-pretty">
+          あなたにマッチしたアニメを提案します
+        </p>
+      </header>
 
-      <section className="rounded-[28px] p-7 flex flex-col gap-5 bg-white/5 border border-violet/20">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-2.5">
-            <span className="size-2.5 rounded-full bg-violet shadow-[0_0_10px_2px_rgba(155,107,255,0.7)] shrink-0" />
-            <h2 className="font-display text-xl text-text m-0">あなたへのおすすめ3選</h2>
+      {/* md以上で高さを固定し、両カードを同じ縦幅・横幅に揃える */}
+      <div className="grid gap-6 md:h-[560px] md:grid-cols-2">
+        <section className="flex min-h-0 flex-col gap-5 rounded-2xl border border-line bg-surface p-6">
+          <div className="flex items-center gap-3">
+            <span className="h-5 w-1 shrink-0 rounded-full bg-accent" aria-hidden="true" />
+            <h2 className="m-0 font-display text-lg text-text text-balance">
+              あなたへのおすすめ3選
+            </h2>
           </div>
-          <p className="text-[13px] text-text-soft m-0">視聴履歴とスコアから選びました</p>
-        </div>
 
-        <div className="flex gap-6 flex-wrap">
-          {top3AnimeList.map((anime) => (
-            <div
-              key={anime.title_japanese}
-              className="w-[200px] bg-surface rounded-3xl p-3 flex flex-col gap-2 border border-violet/25 shadow-[0_0_30px_-10px_rgba(155,107,255,0.4)]"
-            >
-              <div className="relative rounded-2xl overflow-hidden aspect-[3/4]">
-                <Image
-                  src={anime.image_url}
-                  alt={anime.title_japanese}
-                  fill
-                  sizes="200px"
-                  className="object-cover"
-                />
+          <div className="grid min-h-0 flex-1 grid-cols-3 content-start gap-3">
+            {top3AnimeList.map((anime) => (
+              <div key={anime.title_japanese} className="flex flex-col gap-2">
+                <div className="relative aspect-[3/4] overflow-hidden rounded-lg border border-line">
+                  <Image
+                    src={anime.image_url}
+                    alt={anime.title_japanese}
+                    fill
+                    sizes="(max-width: 768px) 30vw, 140px"
+                    className="object-cover"
+                  />
+                </div>
+                <p className="m-0 line-clamp-2 text-xs leading-snug font-medium text-text">
+                  {anime.title_japanese}
+                </p>
               </div>
-              <p className="text-sm font-bold text-text leading-snug line-clamp-2 m-0">
-                {anime.title_japanese}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="rounded-[28px] p-7 flex flex-col gap-5 bg-white/5 border border-cyan/20">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-2.5">
-            <span className="size-2.5 rounded-full bg-cyan shadow-[0_0_10px_2px_rgba(69,224,192,0.7)] shrink-0" />
-            <h2 className="font-display text-xl text-text m-0">記録忘れチェック</h2>
+            ))}
           </div>
-          <p className="text-[13px] text-text-soft m-0">AniListへの記録を忘れていませんか？</p>
-        </div>
 
-        <FetchHistoryButton />
-      </section>
+          <p className="m-0 text-xs text-text-soft">視聴履歴とスコアから選びました</p>
+        </section>
+
+        <section className="flex min-h-0 flex-col gap-5 rounded-2xl border border-line bg-surface p-6">
+          <div className="flex items-center gap-3">
+            <span className="h-5 w-1 shrink-0 rounded-full bg-accent" aria-hidden="true" />
+            <h2 className="m-0 font-display text-lg text-text text-balance">記録忘れチェック</h2>
+          </div>
+
+          <FetchHistoryButton />
+        </section>
+      </div>
     </div>
   )
 }

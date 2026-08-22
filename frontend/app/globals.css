@@ -1,16 +1,15 @@
 @import "tailwindcss";
 
 :root {
-  --background: #140b24;
-  --foreground: #f1eafb;
+  --background: #0b0b0d;
+  --foreground: #ffffff;
 
-  /* KawaAni design tokens: 深夜アニメの夜空・ネオン */
-  --text: #f1eafb;
-  --text-soft: #afa0d6;
-  --surface: #1e1438;
-  --violet: #9b6bff;
-  --magenta: #ff5ca8;
-  --cyan: #45e0c0;
+  /* KawaAni design tokens: ダークベース・白文字・赤アクセント */
+  --text: #ffffff;
+  --text-soft: #9a9aa4;
+  --surface: #17171b;
+  --line: rgba(255, 255, 255, 0.08);
+  --accent: #e50914;
 }
 
 @theme inline {
@@ -24,19 +23,27 @@
   --color-text: var(--text);
   --color-text-soft: var(--text-soft);
   --color-surface: var(--surface);
-  --color-violet: var(--violet);
-  --color-magenta: var(--magenta);
-  --color-cyan: var(--cyan);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: var(--font-body), "Hiragino Maru Gothic ProN", sans-serif;
-  background-image:
-    radial-gradient(circle, rgba(241, 234, 251, 0.5) 1px, transparent 1px),
-    radial-gradient(circle, rgba(241, 234, 251, 0.3) 1px, transparent 1px);
-  background-size: 140px 140px, 90px 90px;
-  background-position: 0 0, 45px 60px;
-  background-attachment: fixed;
+  font-family: var(--font-body), "Hiragino Kaku Gothic ProN", sans-serif;
+}
+
+/* 記録忘れチェックの縦スクロール領域 */
+.scroll-area {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+}
+
+.scroll-area::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scroll-area::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
 }

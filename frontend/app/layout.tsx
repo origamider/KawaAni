@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Kiwi_Maru, Zen_Maru_Gothic } from "next/font/google";
+import { Geist, Geist_Mono, Dela_Gothic_One, Zen_Kaku_Gothic_New } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -12,13 +12,13 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const kiwiMaru = Kiwi_Maru({
+const delaGothicOne = Dela_Gothic_One({
   variable: "--font-display",
-  weight: "500",
+  weight: "400",
   subsets: ["latin"],
 });
 
-const zenMaruGothic = Zen_Maru_Gothic({
+const zenKakuGothicNew = Zen_Kaku_Gothic_New({
   variable: "--font-body",
   weight: ["400", "500", "700"],
   subsets: ["latin"],
@@ -33,7 +33,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="ja"
-      className={`${geistSans.variable} ${geistMono.variable} ${kiwiMaru.variable} ${zenMaruGothic.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${delaGothicOne.variable} ${zenKakuGothicNew.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
