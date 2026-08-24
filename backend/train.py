@@ -18,6 +18,17 @@ class CustomDataset(Dataset):
     def __getitem__(self, index):
         return self.users[index], self.animes[index], self.scores[index]
 
+    """
+    まとめて取得。これ何気に重要。
+    __getitem__だと、要素のアクセスを１つずつ行なってしまう。
+    __getitems__を用意すれば、欲しいindex集合をまとめてアクセスしてできる。
+    https://docs.pytorch.org/tutorials/intermediate/intermediate_data_loading_tutorial.html
+    """
+    
+    def __getitems__(self, indices):
+        idx = torch.tensor(indices)
+        return self.users[idx], self.animes[idx], self.scores[idx]
+
 # user_idとanime_idからscoreを予測するモデル。
 class CollaborativeFilteringModel(nn.Module):
     def __init__(self, n_users, n_animes, embedding_dim, hidden_dim):
@@ -35,7 +46,17 @@ class CollaborativeFilteringModel(nn.Module):
         inputs = torch.concat([users_vector, animes_vector], dim=1)
         predicted_score = self.linear_layer2(self.relu(self.linear_layer1(inputs)))
         
-        return predicted_score
+        """
+        (N,1)->(N)。これをしないと、MSELossの計算の際、broadcastされ、おかしくなる。
+        ex:
+        a = torch.tensor([1,2,3],dtype=torch.float32)
+        b = torch.tensor([[1],[2],[3]],dtype=torch.float32)
+        criterion = nn.MSELoss()
+        loss = criterion(a,b)
+        loss.item()
+        ->1.3333333730697632
+        """
+        return predicted_score.squeeze(1)
 
 # preprocessing
 
@@ -56,20 +77,23 @@ embedding_dim = 5
 lr = 1e-3
 
 train_dataset = CustomDataset(users, animes, scores)
-train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
+train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True,collate_fn=lambda batch: batch,)
 model = CollaborativeFilteringModel(len(le_user.classes_), len(le_anime.classes_), embedding_dim, hidden_dim)
 optimizer = optim.Adam(model.parameters(), lr=lr)
 criterion = nn.MSELoss() # Mean Squared Error
 
 for epoch in range(num_epochs):
+    total_loss = 0
+    ct = 0
     for batch_user_ids, batch_anime_ids, batch_scores in train_loader:
+        ct += 1
         optimizer.zero_grad()
-        
         predicted_output = model(batch_user_ids, batch_anime_ids)
         loss = criterion(predicted_output, batch_scores)
+        total_loss += loss.item()
         loss.backward()
         optimizer.step()
-    print(f"loss = {loss.item()} Epoch: {epoch}")
+    print(f"loss = {total_loss / ct} Epoch: {epoch}")
 
 SAVE_PATH = '../model/model.pt'
 torch.save({
@@ -80,3 +104,5 @@ torch.save({
     "embedding_dim": embedding_dim,
     "hidden_dim": hidden_dim
 },SAVE_PATH)
+
+
