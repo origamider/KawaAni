@@ -5,6 +5,11 @@ from datetime import datetime, timezone
 
 DB_PATH = Path(__file__).parents[1] / "data/kawaani.db"
 
+"""
+ref:
+conn.execute
+https://docs.python.org/ja/3/library/sqlite3.html#sqlite3.Cursor.execute
+"""
 
 # ref:https://www.sqlite.org/lang_createtable.html
 def init_users_table(conn: sqlite3.Connection) -> None:
@@ -33,7 +38,7 @@ def upsert_user_vector(conn: sqlite3.Connection, anilist_username, user_vector: 
 def get_user_vector(conn: sqlite3.Connection, anilist_username: str) -> list[float] | None:
     row = conn.execute(
         "Select user_vector From users where anilist_username = ?",
-        (anilist_username,)
+        [anilist_username]
     ).fetchone()
     if row is None:
         return None
@@ -50,21 +55,29 @@ def init_user_ratings_table(conn: sqlite3.Connection) -> None:
         )
     """)
     conn.commit()
-
+    
+"""
+一度全てを削除し、再度全てを追加する方式をとっている。
+"""
 def replace_user_ratings(conn: sqlite3.Connection, anilist_username: str,ratings: list[tuple[int, float]]) -> None:
     updated_at = datetime.now(timezone.utc).isoformat()
     conn.execute(
         "DELETE FROM user_ratings WHERE anilist_username = ?",
-        (anilist_username,))
+        [anilist_username])
     conn.executemany(
         "INSERT INTO user_ratings (anilist_username, mal_id, score, updated_at) VALUES (?, ?, ?, ?)",
         [(anilist_username, mal_id, score, updated_at) for mal_id, score in ratings],
     )
     conn.commit()
 
+"""
+fetchall()をすると、[(111,), (123,)]のように、tupleのlistで返ってくる。
+そのため、{123, 111}のようにしたい。
+set型のオブジェクトは波括弧{}で生成できる。とのこと。
+"""
 def get_watched_mal_ids(conn: sqlite3.Connection, anilist_username: str) -> set[int]:
     rows = conn.execute(
         "select mal_id from user_ratings where anilist_username = ?",
-        (anilist_username,)
+        [anilist_username]
     ).fetchall()
     return {row[0] for row in rows}
