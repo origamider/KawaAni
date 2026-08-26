@@ -3,7 +3,7 @@ from pathlib import Path
 import torch
 import torch.nn as nn
 
-MODEL_PATH = Path(__file__).parents[1] / "model" / "model.pt"
+MODEL_PATH = Path(__file__).parents[1] / "model" / "model1.pt"
 
 # user_idとanime_idからscoreを予測するモデル。
 class CollaborativeFilteringModel(nn.Module):
@@ -46,8 +46,8 @@ def predict(user_vector, anime_idx_tensor, model):
 def load_frozen_model(path: Path = MODEL_PATH):
     cpt = torch.load(MODEL_PATH,weights_only=False)# checkpoint
     model = CollaborativeFilteringModel(
-        n_users=len(cpt["le_user"].classes_),
-        n_animes=len(cpt["le_anime"].classes_),
+        n_users=cpt["model_state_dict"]["user_embed_layer.weight"].shape[0],
+        n_animes=cpt["model_state_dict"]["anime_embed_layer.weight"].shape[0],
         embedding_dim=cpt["embedding_dim"],
         hidden_dim=cpt["hidden_dim"])
     model.load_state_dict(cpt["model_state_dict"])

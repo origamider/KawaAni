@@ -6,6 +6,8 @@ import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 import torch.optim as optim
 from cf_model import CollaborativeFilteringModel
+from pathlib import Path
+from tqdm import tqdm
 
 class CustomDataset(Dataset):
     def __init__(self, users, animes, scores):
@@ -25,54 +27,52 @@ class CustomDataset(Dataset):
     __getitems__を用意すれば、欲しいindex集合をまとめてアクセスしてできる。
     https://docs.pytorch.org/tutorials/intermediate/intermediate_data_loading_tutorial.html
     """
-    
     def __getitems__(self, indices):
         idx = torch.tensor(indices)
         return self.users[idx], self.animes[idx], self.scores[idx]
 
-# preprocessing
-
-le_user = preprocessing.LabelEncoder()
-le_anime = preprocessing.LabelEncoder()
-df = pd.read_csv('../data/rating_complete.csv')
-df['user_id'] = le_user.fit_transform(df['user_id'].values) # user_idはすでに連番対応済
-df['anime_id'] = le_anime.fit_transform(df['anime_id'].values) # anime_idは連番対応でないため、対応させる。48456->16871
-users = torch.tensor(df['user_id'].values, dtype=torch.long)
-animes = torch.tensor(df['anime_id'].values, dtype=torch.long)
-scores = torch.tensor(df['rating'].values, dtype=torch.float32)
+# GPU使用
+if torch.backends.mps.is_available():
+    device = torch.device("mps")
+else:
+    device = torch.device("cpu")
+    
+df = pd.read_csv(f'{Path(__file__).parents[1]}/data/ratings.csv')
+users = torch.tensor(df['userID'].values, dtype=torch.long).to(device)
+animes = torch.tensor(df['animeID'].values, dtype=torch.long).to(device)
+scores = torch.tensor(df['rating'].values, dtype=torch.float32).to(device)
 
 # hyperparameters
 hidden_dim = 32
-batch_size = 1024
+batch_size = 131072
 num_epochs = 10
-embedding_dim = 5
+embedding_dim = 10
 lr = 1e-3
 
 train_dataset = CustomDataset(users, animes, scores)
 train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True,collate_fn=lambda batch: batch,)
-model = CollaborativeFilteringModel(len(le_user.classes_), len(le_anime.classes_), embedding_dim, hidden_dim)
+model = CollaborativeFilteringModel(df['userID'].max() + 1, df['animeID'].max() + 1, embedding_dim, hidden_dim)
+model.to(device)
 optimizer = optim.Adam(model.parameters(), lr=lr)
 criterion = nn.MSELoss() # Mean Squared Error
 
-for epoch in range(num_epochs):
-    total_loss = 0
+for epoch in tqdm(range(num_epochs)):
+    current_loss = torch.tensor([0.0], device=device)
     ct = 0
     for batch_user_ids, batch_anime_ids, batch_scores in train_loader:
         ct += 1
         optimizer.zero_grad()
         predicted_output = model(batch_user_ids, batch_anime_ids)
         loss = criterion(predicted_output, batch_scores)
-        total_loss += loss.item()
         loss.backward()
         optimizer.step()
-    print(f"loss = {total_loss / ct} Epoch: {epoch}")
+        current_loss += loss.detach()
+    print(f"loss = {current_loss.item() / ct} Epoch: {epoch}")
 
 SAVE_PATH = '../model/model1.pt'
 torch.save({
     "model_state_dict": model.state_dict(),
     "optimizer_state_dict": optimizer.state_dict(),
-    "le_user": le_user,
-    "le_anime": le_anime,
     "embedding_dim": embedding_dim,
     "hidden_dim": hidden_dim
 },SAVE_PATH)

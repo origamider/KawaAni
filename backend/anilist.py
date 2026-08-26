@@ -35,6 +35,7 @@ def fetch_anime_list(username: str) -> list[dict]:
     response = requests.post(url, json={'query': query, 'variables': {'userName': username}})
     return response.json()
 
+# return: (id_mal, score)
 def fetch_ratings(username: str) -> list[tuple[int, float]]:
     # (mal_id, score) のリストを返す。未評価(score=0)とidMal無しは除外。
     anime_list = fetch_anime_list(username)

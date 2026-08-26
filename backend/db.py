@@ -10,8 +10,6 @@ ref:
 conn.execute
 https://docs.python.org/ja/3/library/sqlite3.html#sqlite3.Cursor.execute
 """
-
-# ref:https://www.sqlite.org/lang_createtable.html
 def init_users_table(conn: sqlite3.Connection) -> None:
     conn.execute("""
         CREATE TABLE IF NOT EXISTS users (
@@ -81,3 +79,29 @@ def get_watched_mal_ids(conn: sqlite3.Connection, anilist_username: str) -> set[
         [anilist_username]
     ).fetchall()
     return {row[0] for row in rows}
+
+def get_mal_to_anime_id(conn: sqlite3.Connection) -> dict[int, int]:
+    return dict(conn.execute("SELECT mal_id, anime_id FROM anime").fetchall())
+
+# ref:https://www.sqlite.org/lang_expr.html#the_in_and_not_in_operators
+# mal_id配列からアニメ情報を取得する。
+def get_anime_info_from_mal_ids(conn: sqlite3.Connection, mal_ids: list[int]) -> dict[int, dict]:
+    rows = conn.execute(
+        """
+        SELECT mal_id, anime_id, english_title, image_url, japanese_title
+        FROM anime
+        WHERE mal_id IN (SELECT value FROM json_each(?))
+        """,
+        [json.dumps(mal_ids)]
+    ).fetchall()
+    
+    return {
+        row[0]: {
+            "mal_id": row[0],
+            "anime_id": row[1],
+            "english_title": row[2],
+            "image_url": row[3],
+            "japanese_title": row[4],
+        }
+        for row in rows
+    }
