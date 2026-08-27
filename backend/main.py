@@ -2,9 +2,12 @@ from fastapi import FastAPI
 import sqlite3
 import pandas as pd
 from pathlib import Path
-from cf_recommend import recommend_top3
+from cf_recommend import recommend_top3_mal_id
+from cf_model import load_frozen_model
+import db
 
 app = FastAPI()
+cpt, model = load_frozen_model()
 
 # @app.get("/recommend/next")
 # def get_recommend_top3():
@@ -16,4 +19,14 @@ app = FastAPI()
 
 @app.get("/recommend/next")
 def get_recommend_top3():
-    recommend_top3
+    conn = sqlite3.connect(db.DB_PATH)
+    recommend_top3_mal_id(model, conn)
+    result = recommend_top3_mal_id(model, conn)
+    conn.close()
+    return [
+        {
+            "title_japanese": anime["japanese_title"],
+            "image_url": anime["image_url"]
+        }
+        for anime in result
+    ]

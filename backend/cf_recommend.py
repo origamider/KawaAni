@@ -2,6 +2,7 @@ import torch
 import numpy as np
 import db
 from cf_model import predict
+import anilist
 
 def recommend_top3_mal_id(model, conn, anilist_username: str = "kawarin") -> list[dict]:
     user_vector = db.get_user_vector(conn, anilist_username)
@@ -23,6 +24,15 @@ def recommend_top3_mal_id(model, conn, anilist_username: str = "kawarin") -> lis
     top_mal_ids = [candidate_ids[i] for i in top.indices.tolist()]
     
     info = db.get_anime_info_from_mal_ids(conn, top_mal_ids)
+    
+    for id_mal in top_mal_ids:
+        title = info[id_mal]['japanese_title']
+        if title is None:
+            title = anilist.fetch_japanese_title_from_mal_id(id_mal)
+            db.update_japanese_title(conn, id_mal, title)
+            info[id_mal]['japanese_title'] = title
+    
+    return [info[id_mal] for id_mal in top_mal_ids]
     
     
     

@@ -105,3 +105,11 @@ def get_anime_info_from_mal_ids(conn: sqlite3.Connection, mal_ids: list[int]) ->
         }
         for row in rows
     }
+
+# AniListから取得したjapanese_titleをanimeテーブルに保存する。
+def update_japanese_title(conn: sqlite3.Connection, mal_id: int, japanese_title: str) -> None:
+    conn.execute(
+        "UPDATE anime SET japanese_title = ? WHERE mal_id = ?",
+        [japanese_title, mal_id]
+    )
+    conn.commit()
