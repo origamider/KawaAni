@@ -21,6 +21,42 @@ def init_users_table(conn: sqlite3.Connection) -> None:
     """)
     conn.commit()
 
+def init_anime_table(conn: sqlite3.Connection) -> None:
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS anime (
+            mal_id INTEGER PRIMARY KEY,
+            anime_id INTEGER NOT NULL UNIQUE,
+            english_title TEXT,
+            image_url TEXT NOT NULL,
+            japanese_title TEXT
+        )
+        """
+    )
+    conn.commit()
+
+def init_user_ratings_table(conn: sqlite3.Connection) -> None:
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS user_ratings (
+            anilist_username TEXT NOT NULL,
+            mal_id INTEGER NOT NULL,
+            score REAL NOT NULL,
+            updated_at TEXT NOT NULL,
+            PRIMARY KEY (anilist_username, mal_id)
+        )
+    """)
+    conn.commit()
+
+def init_anilist_token_table(conn: sqlite3.Connection) -> None:
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS anilist_token (
+            anilist_username TEXT PRIMARY KEY,
+            access_token TEXT NOT NULL,
+            obtained_at TEXT NOT NULL
+        )
+    """)
+    conn.commit()
+
 def upsert_user_vector(conn: sqlite3.Connection, anilist_username, user_vector: list[float]) -> None:
     updated_at = datetime.now(timezone.utc).isoformat()
     conn.execute("""
@@ -42,18 +78,6 @@ def get_user_vector(conn: sqlite3.Connection, anilist_username: str) -> list[flo
         return None
     return json.loads(row[0])
 
-def init_user_ratings_table(conn: sqlite3.Connection) -> None:
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS user_ratings (
-            anilist_username TEXT NOT NULL,
-            mal_id INTEGER NOT NULL,
-            score REAL NOT NULL,
-            updated_at TEXT NOT NULL,
-            PRIMARY KEY (anilist_username, mal_id)
-        )
-    """)
-    conn.commit()
-    
 """
 一度全てを削除し、再度全てを追加する方式をとっている。
 """
@@ -113,3 +137,22 @@ def update_japanese_title(conn: sqlite3.Connection, mal_id: int, japanese_title:
         [japanese_title, mal_id]
     )
     conn.commit()
+
+def save_anilist_token(conn: sqlite3.Connection, anilist_username: str, access_token: str) -> None:
+    obtained_at = datetime.now(timezone.utc).isoformat()
+    conn.execute("""
+        INSERT INTO anilist_token (anilist_username, access_token, obtained_at)
+        VALUES (?, ?, ?)
+        ON CONFLICT(anilist_username)
+        DO UPDATE SET
+            access_token = excluded.access_token,
+            obtained_at = excluded.obtained_at
+    """, (anilist_username, access_token, obtained_at))
+    conn.commit()
+
+def get_anilist_token(conn: sqlite3.Connection, anilist_username: str) -> str | None:
+    row = conn.execute(
+        "SELECT access_token FROM anilist_token WHERE anilist_username = ?",
+        [anilist_username]
+    ).fetchone()
+    return row[0] if row is not None else None

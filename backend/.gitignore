@@ -4,3 +4,4 @@ __pycache__/
 # personal test files
 test.py
 test.ipynb
+.env

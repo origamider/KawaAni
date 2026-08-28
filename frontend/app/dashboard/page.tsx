@@ -6,6 +6,13 @@ type AnimeData = {
   image_url: string
 }
 
+const anilistAuthorizeParams = new URLSearchParams({
+  client_id: process.env.NEXT_PUBLIC_ANILIST_CLIENT_ID!,
+  redirect_uri: process.env.NEXT_PUBLIC_ANILIST_REDIRECT_URI!,
+  response_type: "code",
+})
+const anilistLoginUrl = `https://anilist.co/api/v2/oauth/authorize?${anilistAuthorizeParams}`
+
 export default async function Page() {
   const res = await fetch("http://127.0.0.1:8000/recommend/next")
   const top3AnimeList: AnimeData[] = await res.json()
@@ -17,6 +24,12 @@ export default async function Page() {
         <p className="m-0 text-sm text-text-soft text-pretty">
           あなたにマッチしたアニメを提案します
         </p>
+        <a
+          href={anilistLoginUrl}
+          className="mt-1 self-start text-sm font-medium text-accent transition-colors duration-150 hover:text-[#f6121d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        >
+          AniListと連携する →
+        </a>
       </header>
 
       {/* md以上で高さを固定し、両カードを同じ縦幅・横幅に揃える */}

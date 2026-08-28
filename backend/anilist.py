@@ -1,6 +1,8 @@
 import requests
 import json
+import os
 ANILIST_ENDPOINT = 'https://graphql.anilist.co'
+
 def fetch_anime_list(username: str) -> list[dict]:
     query = """
     query ($userName: String) {
@@ -59,3 +61,87 @@ def fetch_japanese_title_from_mal_id(mal_id: int) -> str:
     response = requests.post(ANILIST_ENDPOINT, json={'query': query, 'variables': {'idMal': mal_id}})
     title = response.json()['data']['Media']['title']['native']
     return title
+
+"""
+ref:
+1.POST形式
+https://coddy.tech/docs/ja/python/http-requests
+2.AniList Token取得
+https://docs.anilist.co/guide/auth/authorization-code
+"""
+def get_access_token(code: str) -> str:
+    response = requests.post(
+        "https://anilist.co/api/v2/oauth/token",
+        headers={
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+        },
+        json={
+            "grant_type": "authorization_code",
+            "client_id": os.environ['ANILIST_CLIENT_ID'],
+            "client_secret": os.environ['ANILIST_CLIENT_SECRET'],
+            "redirect_uri": os.environ['ANILIST_REDIRECT_URI'],
+            "code": code
+        }
+    )
+    return response.json()["access_token"]
+
+def get_anilist_username(access_token: str) -> str:
+    query = """
+        query{
+            Viewer{
+                name
+            }
+        }
+    """
+    response = requests.post(
+        ANILIST_ENDPOINT,
+        headers={
+            "Authorization": f"Bearer {access_token}",
+            'Content-Type': 'application/json',
+			'Accept': 'application/json',
+        },
+        json={'query': query}
+    )
+    return response.json()['data']['Viewer']['name']
+
+def get_anilist_media_id(mal_id: int) -> int:
+    query = """
+        query ($idMal: Int)
+        { 
+            Media(idMal: $idMal){
+                id
+            } 
+        }
+    """
+    response = requests.post(
+        ANILIST_ENDPOINT,
+        json={
+            'query': query,
+            'variables': {'idMal': mal_id}
+        }
+    )
+    return response.json()['data']['Media']['id']
+
+def save_score(access_token: str, media_id: int, score: float) -> dict:
+    mutation = """
+    mutation ($mediaId: Int, $score: Float) {
+        SaveMediaListEntry(mediaId: $mediaId, status: COMPLETED, score: $score) {
+            id
+            status
+            score
+        }
+    }
+    """
+    response = requests.post(
+        ANILIST_ENDPOINT,
+        json={
+            'query': mutation,
+            'variables':{
+                'mediaId': media_id,
+                'score': score
+            }
+        },
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    return response.json()
