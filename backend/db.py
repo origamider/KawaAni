@@ -57,6 +57,12 @@ def init_anilist_token_table(conn: sqlite3.Connection) -> None:
     """)
     conn.commit()
 
+def init_all_tables(conn: sqlite3.Connection) -> None:
+    init_users_table(conn)
+    init_anime_table(conn)
+    init_user_ratings_table(conn)
+    init_anilist_token_table(conn)
+
 def upsert_user_vector(conn: sqlite3.Connection, anilist_username, user_vector: list[float]) -> None:
     updated_at = datetime.now(timezone.utc).isoformat()
     conn.execute("""

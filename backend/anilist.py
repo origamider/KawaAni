@@ -145,3 +145,32 @@ def save_score(access_token: str, media_id: int, score: float) -> dict:
         headers={"Authorization": f"Bearer {access_token}"},
     )
     return response.json()
+
+def search_anime(title: str, per_page: int = 5) -> list[dict]:
+    query = """
+        query ($search: String, $perPage: Int)
+        {
+            Page(perPage: $perPage) {
+                media(search: $search, type: ANIME) {
+                    id
+                    idMal
+                    title {
+                        romaji
+                        english
+                        native
+                    }
+                    coverImage {
+                        medium
+                    }
+                }
+            }
+        }
+    """
+    response = requests.post(
+        ANILIST_ENDPOINT,
+        json={
+            'query': query,
+            'variables': {'search': title, 'perPage': per_page}
+        }
+    )
+    return response.json()['data']['Page']['media']
