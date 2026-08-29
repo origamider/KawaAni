@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
 import sqlite3
 import pandas as pd
 from pathlib import Path
@@ -62,8 +63,8 @@ def anilist_callback(code: str):
     db.init_anilist_token_table(conn)
     db.save_anilist_token(conn, anilist_username, access_token)
     conn.close()
-    
-    return {"access_token": access_token}  # 動作確認用の一時的な戻り値
+
+    return RedirectResponse("http://localhost:3000/dashboard")
 
 @app.get("/anilist/search")
 def anilist_search(title: str):
@@ -73,14 +74,25 @@ def anilist_search(title: str):
         return {"cleaned_title": cleaned_title, "anime": None}
     return {"cleaned_title": cleaned_title, "anime": candidate_animes[0]}
 
-@app.get("/anilist/save")
+@app.post("/anilist/save")
 def anilist_save(body: ScoreRequest):
     conn = sqlite3.connect(db.DB_PATH)
     anilist_username = "kawarin"
     access_token = db.get_anilist_token(conn, anilist_username)
-    
+    conn.close()
+
     if access_token is None:
         return {"ok": False, "error": "AniList未連携です"}
-    
+
     result = save_score(access_token, body.mediaId, body.score)
+    if "errors" in result:
+        return {"ok": False, "error": result["errors"][0]["message"]}
     return {"ok": True, "result": result}
+
+# AniList連携チェック
+@app.get("/auth/anilist/status")
+def anilist_status():
+    conn = sqlite3.connect(db.DB_PATH)
+    token = db.get_anilist_token(conn, "kawarin")
+    conn.close()
+    return {"connected": token is not None}

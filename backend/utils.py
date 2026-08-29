@@ -27,6 +27,8 @@ def normalize_title(title: str) -> str:
         normalized_title = re.search(r"(.+?)\s*\|\s*(?:アニメ動画見放題\s*\|\s*)?dアニメストア",title).group(1)
         normalized_title = re.sub(r"\s*第\d+話$", "", normalized_title) #第何話を除外
         normalized_title = re.sub(r"\s*STAGE\d+$", "", normalized_title, flags=re.IGNORECASE) 
+        normalized_title = re.sub(r"\s*score\d+$", "", normalized_title, flags=re.IGNORECASE) 
+        normalized_title = re.sub(r"\s*#\d+$", "", normalized_title)  # #N形式の話数表記を除外
     else:
         normalized_title = title
 

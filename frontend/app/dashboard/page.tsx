@@ -14,8 +14,12 @@ const anilistAuthorizeParams = new URLSearchParams({
 const anilistLoginUrl = `https://anilist.co/api/v2/oauth/authorize?${anilistAuthorizeParams}`
 
 export default async function Page() {
-  const res = await fetch("http://127.0.0.1:8000/recommend/next")
+  const [res, statusRes] = await Promise.all([
+    fetch("http://127.0.0.1:8000/recommend/next"),
+    fetch("http://127.0.0.1:8000/auth/anilist/status"),
+  ])
   const top3AnimeList: AnimeData[] = await res.json()
+  const { connected }: { connected: boolean } = await statusRes.json()
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 pt-12 pb-16">
@@ -24,12 +28,18 @@ export default async function Page() {
         <p className="m-0 text-sm text-text-soft text-pretty">
           あなたにマッチしたアニメを提案します
         </p>
-        <a
-          href={anilistLoginUrl}
-          className="mt-1 self-start text-sm font-medium text-accent transition-colors duration-150 hover:text-[#f6121d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-        >
-          AniListと連携する →
-        </a>
+        {connected ? (
+          <p className="mt-1 text-sm text-text-soft">
+            AniList: kawarinとして連携中
+          </p>
+        ) : (
+          <a
+            href={anilistLoginUrl}
+            className="mt-1 self-start text-sm font-medium text-accent transition-colors duration-150 hover:text-[#f6121d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          >
+            AniListと連携する →
+          </a>
+        )}
       </header>
 
       {/* md以上で高さを固定し、両カードを同じ縦幅・横幅に揃える */}
